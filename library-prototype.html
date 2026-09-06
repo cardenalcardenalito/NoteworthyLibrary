@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Noteworthy Stories — Library</title>
+<style>
+  :root{
+    --ink:#1B2430;
+    --panel:#242F3D;
+    --panel-edge:#33404F;
+    --amber:#E8A33D;
+    --amber-dim:#5A4526;
+    --text:#EDEAE3;
+    --muted:#7C8798;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{
+    margin:0; padding:0; background:var(--ink); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+  }
+  header{
+    padding:22px 20px 14px;
+    border-bottom:1px solid var(--panel-edge);
+  }
+  header h1{
+    margin:0 0 4px;
+    font-size:19px;
+    font-weight:600;
+    letter-spacing:0.01em;
+  }
+  #status{
+    font-size:14px;
+    color:var(--muted);
+    min-height:20px;
+  }
+  #status.live{ color:var(--amber); }
+  main{
+    padding:16px;
+    max-width:640px;
+    margin:0 auto;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:10px;
+  }
+  @media (min-width:480px){
+    .grid{ grid-template-columns:repeat(6, 1fr); }
+  }
+  @media (min-width:700px){
+    .grid{ grid-template-columns:repeat(8, 1fr); }
+  }
+  button.excerpt{
+    aspect-ratio:1;
+    border-radius:10px;
+    border:1px solid var(--panel-edge);
+    background:var(--panel);
+    color:var(--text);
+    font-size:16px;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:background 120ms ease, border-color 120ms ease, transform 80ms ease;
+    padding:0;
+    position:relative;
+  }
+  button.excerpt:active{ transform:scale(0.94); }
+  button.excerpt.playing{
+    background:var(--amber);
+    border-color:var(--amber);
+    color:#26170A;
+  }
+  button.excerpt.playing::after{
+    content:"";
+    position:absolute;
+    inset:-4px;
+    border-radius:13px;
+    border:2px solid var(--amber);
+    opacity:0.5;
+    animation:pulse 1.1s ease-out infinite;
+  }
+  @keyframes pulse{
+    0%{ transform:scale(1); opacity:0.55; }
+    100%{ transform:scale(1.14); opacity:0; }
+  }
+  footer{
+    max-width:640px;
+    margin:0 auto;
+    padding:18px 20px 40px;
+    color:var(--muted);
+    font-size:12.5px;
+    line-height:1.5;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Repertoire Library</h1>
+  <div id="status">Tap a number to preview an excerpt.</div>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>
+  Prototype build. Numbers currently play a short placeholder tone, not the real excerpts.
+  Swap the <code>TRACKS</code> array in the source for the 50 real audio files to go live.
+</footer>
+
+<script>
+  const TOTAL = 50;
+  const grid = document.getElementById('grid');
+  const status = document.getElementById('status');
+
+  // Placeholder: each number gets its own tone so they're distinguishable during testing.
+  // Replace this whole object with real file paths, e.g. TRACKS[7] = "audio/excerpt-07.mp3"
+  let audioCtx = null;
+  let activeOsc = null;
+  let activeButton = null;
+
+  function ensureCtx(){
+    if(!audioCtx){
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function stopActive(){
+    if(activeOsc){
+      try{ activeOsc.stop(); }catch(e){}
+      activeOsc = null;
+    }
+    if(activeButton){
+      activeButton.classList.remove('playing');
+      activeButton = null;
+    }
+    status.textContent = "Tap a number to preview an excerpt.";
+    status.classList.remove('live');
+  }
+
+  function playPlaceholderTone(n, btn){
+    const ctx = ensureCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    // Spread frequencies across the 50 so each number sounds distinct during testing
+    const freq = 220 + (n * 9);
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.value = 0.0001;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    const now = ctx.currentTime;
+    gain.gain.exponentialRampToValueAtTime(0.18, now + 0.03);
+    osc.start();
+    activeOsc = osc;
+    activeButton = btn;
+    status.textContent = "Now playing: excerpt " + n;
+    status.classList.add('live');
+  }
+
+  for(let n = 1; n <= TOTAL; n++){
+    const btn = document.createElement('button');
+    btn.className = 'excerpt';
+    btn.textContent = n;
+    btn.setAttribute('aria-label', 'Play excerpt ' + n);
+    btn.addEventListener('click', () => {
+      const wasActive = btn.classList.contains('playing');
+      stopActive();
+      if(!wasActive){
+        // In the real version: replace playPlaceholderTone with
+        // an <audio> element pointed at TRACKS[n] and call .play()
+        playPlaceholderTone(n, btn);
+        btn.classList.add('playing');
+      }
+    });
+    grid.appendChild(btn);
+  }
+</script>
+
+</body>
+</html>
