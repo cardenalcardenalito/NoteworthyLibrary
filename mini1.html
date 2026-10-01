@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-<title>Noteworthy Stories — Library for Exercise #1 </title>
+<title>Repertoire Library for Exercise #1</title>
+
 <style>
   :root{
     --ink:#1B2430;
@@ -14,44 +15,67 @@
     --text:#EDEAE3;
     --muted:#7C8798;
   }
-  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  *{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+  }
+
   html,body{
-    margin:0; padding:0; background:var(--ink); color:var(--text);
+    margin:0;
+    padding:0;
+    background:var(--ink);
+    color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     min-height:100vh;
   }
+
   header{
     padding:22px 20px 14px;
     border-bottom:1px solid var(--panel-edge);
   }
+
   header h1{
     margin:0 0 4px;
     font-size:19px;
     font-weight:600;
     letter-spacing:0.01em;
   }
+
   #status{
     font-size:14px;
     color:var(--muted);
     min-height:20px;
   }
-  #status.live{ color:var(--amber); }
+
+  #status.live{
+    color:var(--amber);
+  }
+
   main{
     padding:16px;
     max-width:640px;
     margin:0 auto;
   }
+
   .grid{
     display:grid;
     grid-template-columns:repeat(5, 1fr);
     gap:10px;
   }
+
   @media (min-width:480px){
-    .grid{ grid-template-columns:repeat(6, 1fr); }
+    .grid{
+      grid-template-columns:repeat(6, 1fr);
+    }
   }
+
   @media (min-width:700px){
-    .grid{ grid-template-columns:repeat(8, 1fr); }
+    .grid{
+      grid-template-columns:repeat(8, 1fr);
+    }
   }
+
   button.excerpt{
     aspect-ratio:1;
     border-radius:10px;
@@ -68,12 +92,17 @@
     padding:0;
     position:relative;
   }
-  button.excerpt:active{ transform:scale(0.94); }
+
+  button.excerpt:active{
+    transform:scale(0.94);
+  }
+
   button.excerpt.playing{
     background:var(--amber);
     border-color:var(--amber);
     color:#26170A;
   }
+
   button.excerpt.playing::after{
     content:"";
     position:absolute;
@@ -83,24 +112,24 @@
     opacity:0.5;
     animation:pulse 1.1s ease-out infinite;
   }
+
   @keyframes pulse{
-    0%{ transform:scale(1); opacity:0.55; }
-    100%{ transform:scale(1.14); opacity:0; }
-  }
-  footer{
-    max-width:640px;
-    margin:0 auto;
-    padding:18px 20px 40px;
-    color:var(--muted);
-    font-size:12.5px;
-    line-height:1.5;
+    0%{
+      transform:scale(1);
+      opacity:0.55;
+    }
+    100%{
+      transform:scale(1.14);
+      opacity:0;
+    }
   }
 </style>
 </head>
+
 <body>
 
 <header>
-  <h1>Repertoire Library</h1>
+  <h1>Repertoire Library for Exercise #1</h1>
   <div id="status">Tap a number to preview an excerpt.</div>
 </header>
 
@@ -108,25 +137,11 @@
   <div class="grid" id="grid"></div>
 </main>
 
-<footer>
-  Wired to real audio files. Upload your 50 mp3s into an "audio" folder next to this file,
-  named excerpt-01.mp3 through excerpt-50.mp3 (two digits, zero-padded). If a number's file
-  is missing, the status line above will say so instead of failing silently.
-</footer>
-
 <script>
   const TOTAL = 15;
   const grid = document.getElementById('grid');
   const status = document.getElementById('status');
 
-  // Each excerpt file must live in an "audio" folder next to this HTML file,
-  // named excerpt-01.mp3 through excerpt-50.mp3 (two digits, zero-padded).
-  // Example folder layout on GitHub:
-  //   index.html
-  //   audio/excerpt-01.mp3
-  //   audio/excerpt-02.mp3
-  //   ...
-  //   audio/excerpt-50.mp3
   function trackPath(n){
     const padded = String(n).padStart(2, '0');
     return 'audio/mini/miniexcerpt-' + padded + '.mp3';
@@ -141,46 +156,66 @@
       currentAudio.currentTime = 0;
       currentAudio = null;
     }
+
     if(activeButton){
       activeButton.classList.remove('playing');
       activeButton = null;
     }
+
     status.textContent = "Tap a number to preview an excerpt.";
     status.classList.remove('live');
   }
 
   function playTrack(n, btn){
     const audio = new Audio(trackPath(n));
+
     audio.addEventListener('ended', () => {
-      // Reset the UI automatically once the excerpt finishes on its own.
-      if(activeButton === btn){ stopActive(); }
+      if(activeButton === btn){
+        stopActive();
+      }
     });
+
     audio.addEventListener('error', () => {
-      status.textContent = "Couldn't find audio/excerpt-" + String(n).padStart(2,'0') + ".mp3 — check the file was uploaded.";
+      const filename = 'miniexcerpt-' + String(n).padStart(2, '0') + '.mp3';
+
+      status.textContent = "Couldn't find audio/mini/" + filename + ".";
       status.classList.remove('live');
+
       btn.classList.remove('playing');
-      if(activeButton === btn){ activeButton = null; currentAudio = null; }
+
+      if(activeButton === btn){
+        activeButton = null;
+        currentAudio = null;
+      }
     });
+
     audio.play();
+
     currentAudio = audio;
     activeButton = btn;
+
     status.textContent = "Now playing: excerpt " + n;
     status.classList.add('live');
   }
 
   for(let n = 1; n <= TOTAL; n++){
     const btn = document.createElement('button');
+
     btn.className = 'excerpt';
     btn.textContent = n;
     btn.setAttribute('aria-label', 'Play excerpt ' + n);
+
     btn.addEventListener('click', () => {
       const wasActive = btn.classList.contains('playing');
+
       stopActive();
+
       if(!wasActive){
         playTrack(n, btn);
         btn.classList.add('playing');
       }
     });
+
     grid.appendChild(btn);
   }
 </script>
