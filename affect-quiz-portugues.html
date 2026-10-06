@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Noteworthy Stories — Quiz de Afetos</title>
+<style>
+:root{--ink:#1B2430;--panel:#242F3D;--edge:#33404F;--amber:#E8A33D;--text:#EDEAE3;--muted:#7C8798;--paused:#6B9FD4;--danger:#C0392B}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100vh;background:var(--ink);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{padding:22px 20px 15px;border-bottom:1px solid var(--edge)}
+.header-row{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}
+h1{margin:0 0 4px;font-size:19px;font-weight:600}
+#progress{font-size:14px;color:var(--muted)}
+main{max-width:640px;margin:0 auto;padding:20px 16px 35px}
+#quiz{display:block}
+.excerpt-title{text-align:center;font-size:18px;font-weight:600;margin:5px 0 15px}
+.player{display:flex;align-items:center;gap:12px;padding:16px;border:1px solid var(--edge);background:var(--panel);border-radius:12px;margin-bottom:22px}
+#play{width:58px;height:58px;border:0;border-radius:50%;background:var(--amber);color:#26170a;font-size:23px;cursor:pointer;flex:none}
+#play.paused{background:var(--paused);color:#fff}
+.player-info{flex:1;min-width:0}
+.player-info strong{display:block;font-size:15px}
+.player-info span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+#bar{height:5px;background:var(--edge);border-radius:5px;overflow:hidden;margin-top:11px}
+#bar-fill{height:100%;width:0;background:var(--amber);transition:width .1s linear}
+h2{font-size:16px;font-weight:600;margin:0 0 12px}
+.instruction{color:var(--muted);font-size:13px;line-height:1.45;margin:-4px 0 16px}
+.affects{display:grid;grid-template-columns:1fr;gap:9px}
+.affect{position:relative}
+.affect input{position:absolute;opacity:0;pointer-events:none}
+.affect label{display:block;padding:13px 14px;border:1px solid var(--edge);background:var(--panel);border-radius:9px;cursor:pointer;transition:.12s}
+.affect label strong{display:block;font-size:14px;margin-bottom:3px}
+.affect label span{display:block;font-size:12px;color:var(--muted);line-height:1.35}
+.affect input:checked+label{border-color:var(--amber);background:#3A3023}
+.affect input:focus-visible+label{outline:2px solid var(--amber);outline-offset:2px}
+.actions{display:flex;gap:10px;margin-top:20px}
+button.action{flex:1;padding:13px 16px;border-radius:9px;border:1px solid var(--edge);background:var(--panel);color:var(--text);font-size:14px;font-weight:600;cursor:pointer}
+button.action.primary{background:var(--amber);border-color:var(--amber);color:#26170a}
+button.action:disabled{opacity:.4;cursor:not-allowed}
+#start{text-align:center;padding-top:35px}
+#start p{color:var(--muted);line-height:1.5;font-size:14px;max-width:500px;margin:12px auto 22px}
+.results{display:none}
+.results h2{font-size:20px;margin-bottom:8px}
+.summary{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:18px}
+.result-row{padding:12px 0;border-top:1px solid var(--edge)}
+.result-row strong{display:block;margin-bottom:5px}
+.tags{color:var(--amber);font-size:13px;line-height:1.5}
+#status{min-height:18px;color:var(--muted);font-size:12px;margin-top:10px;text-align:center}
+@media(min-width:520px){.affects{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-row">
+    <div>
+      <h1>Noteworthy Stories — Quiz de Afetos</h1>
+      <div id="progress">Pronto</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="start">
+    <h2>Associe afetos aos excertos</h2>
+    <p>Ouça cada um dos 50 excertos e selecione um ou mais afetos que você associa à música. É necessário selecionar pelo menos um antes de avançar. Não há respostas certas ou erradas.</p>
+    <button class="action primary" id="begin">Começar o quiz</button>
+  </section>
+
+  <section id="quiz" style="display:none">
+    <div class="excerpt-title" id="excerpt-title">Excerto 1</div>
+    <div class="player">
+      <button id="play" aria-label="Reproduzir excerto">▶</button>
+      <div class="player-info">
+        <strong id="player-label">Excerpt 01</strong>
+        <span id="player-state">Toque para ouvir</span>
+        <div id="bar"><div id="bar-fill"></div></div>
+      </div>
+    </div>
+
+    <h2>Que afetos você ouve?</h2>
+    <div class="instruction">Selecione todos os que se aplicam. Você pode ouvir novamente antes de continuar.</div>
+    <div class="affects" id="affects"></div>
+    <div class="actions">
+      <button class="action" id="restartAudio">Ouvir novamente</button>
+      <button class="action primary" id="next">Próximo excerto</button>
+    </div>
+    <div id="status"></div>
+  </section>
+
+  <section id="results" class="results">
+    <h2>Quiz concluído</h2>
+    <div class="summary">Abaixo estão suas associações para os 50 excertos. Baixe os resultados em texto simples para salvá-los ou compartilhá-los.</div>
+    <div id="result-list"></div>
+    <div class="actions">
+      <button class="action primary" id="download">Baixar resultados</button>
+      <button class="action" id="again">Começar novamente</button>
+    </div>
+  </section>
+</main>
+
+<script>
+const AFFECTS = [
+  {name:"ALEGRIA", desc:"Brilhante, enérgica, leve. Música que eleva e avança."},
+  {name:"TRISTEZA", desc:"Pesada, lenta, interiorizada. Música que permanece e dói."},
+  {name:"MEDO", desc:"Tensa, instável, inquietante. Música que mantém você em alerta."},
+  {name:"RAIVA / CONFLITO", desc:"Forte, impetuosa, áspera. Música que impulsiona e confronta."},
+  {name:"TERNURA", desc:"Suave, próxima, calorosa. Música que acolhe sem sentimentalismo."},
+  {name:"SURPRESA / EXPECTATIVA", desc:"Inesperada, suspensa. Música que abre uma pergunta."},
+  {name:"PAZ", desc:"Imóvel, aberta, resolvida. Música que não precisa provar mais nada."}
+];
+
+const total = 50;
+let current = 1;
+let audio = null;
+let answers = Array.from({length: total}, () => []);
+
+const $ = id => document.getElementById(id);
+function pad(n){ return String(n).padStart(2,"0"); }
+
+function renderAffects(){
+  $("affects").innerHTML = "";
+  AFFECTS.forEach((a,i)=>{
+    const wrap=document.createElement("div");
+    wrap.className="affect";
+    wrap.innerHTML=`
+      <input type="checkbox" id="affect-${i}" value="${i}">
+      <label for="affect-${i}">
+        <strong>${a.name}</strong>
+        <span>${a.desc}</span>
+      </label>`;
+    $("affects").appendChild(wrap);
+  });
+}
+
+function stopAudio(reset=true){
+  if(audio){
+    audio.pause();
+    if(reset) audio.currentTime=0;
+  }
+  $("play").textContent="▶";
+  $("play").classList.remove("paused");
+  $("player-state").textContent="Toque para ouvir";
+  if(reset) $("bar-fill").style.width="0%";
+}
+
+function loadExcerpt(n){
+  stopAudio();
+  current=n;
+  $("progress").textContent=`Excerto ${n} de ${total}`;
+  $("excerpt-title").textContent=`Excerto ${n}`;
+  $("player-label").textContent=`Excerto ${pad(n)}`;
+  $("status").textContent="";
+  AFFECTS.forEach((_,i)=>{
+    $(`affect-${i}`).checked=answers[n-1].includes(i);
+  });
+
+  audio = new Audio(`audio/excerpt-${pad(n)}.mp3`);
+  audio.addEventListener("timeupdate",()=>{
+    if(audio.duration) $("bar-fill").style.width=(audio.currentTime/audio.duration*100)+"%";
+  });
+  audio.addEventListener("play",()=>{
+    $("play").textContent="❚❚";
+    $("play").classList.add("paused");
+    $("player-state").textContent="Reproduzindo…";
+  });
+  audio.addEventListener("pause",()=>{
+    if(audio.currentTime < audio.duration){
+      $("play").textContent="▶";
+      $("play").classList.remove("paused");
+      $("player-state").textContent="Pausado";
+    }
+  });
+  audio.addEventListener("ended",()=>{
+    $("play").textContent="▶";
+    $("play").classList.remove("paused");
+    $("player-state").textContent="Terminado — ouça novamente se quiser";
+  });
+  audio.addEventListener("error",()=>{
+    $("player-state").textContent=`Não foi possível carregar audio/excerpt-${pad(n)}.mp3`;
+  });
+}
+
+$("begin").addEventListener("click",()=>{
+  $("start").style.display="none";
+  $("results").style.display="none";
+  $("quiz").style.display="block";
+  renderAffects();
+  loadExcerpt(1);
+});
+
+$("play").addEventListener("click",()=>{
+  if(!audio) return;
+  if(audio.paused) audio.play().catch(()=>{});
+  else audio.pause();
+});
+
+$("restartAudio").addEventListener("click",()=>{
+  if(audio){ audio.currentTime=0; audio.play().catch(()=>{}); }
+});
+
+$("next").addEventListener("click",()=>{
+  const selected=[...document.querySelectorAll("#affects input:checked")].map(x=>Number(x.value));
+  if(!selected.length){
+    $("status").textContent="Selecione pelo menos um afeto antes de continuar.";
+    return;
+  }
+  answers[current-1]=selected;
+  stopAudio();
+  if(current < total) loadExcerpt(current+1);
+  else finish();
+});
+
+function finish(){
+  stopAudio();
+  $("quiz").style.display="none";
+  $("results").style.display="block";
+  $("progress").textContent="Concluído — 50 de 50";
+  const list=$("result-list");
+  list.innerHTML="";
+  answers.forEach((selected,i)=>{
+    const row=document.createElement("div");
+    row.className="result-row";
+    const names=selected.map(x=>AFFECTS[x].name);
+    row.innerHTML=`<strong>Excerto ${pad(i+1)}</strong><div class="tags">${names.join(" · ")}</div>`;
+    list.appendChild(row);
+  });
+}
+
+function makeText(){
+  const lines=[
+    "NOTEWORTHY STORIES — RESULTADOS DO QUIZ DE AFETOS",
+    "",
+    `Concluído: ${new Date().toLocaleString("pt-BR")}`,
+    "",
+    "Associações dos excertos:",
+    ""
+  ];
+  answers.forEach((selected,i)=>{
+    lines.push(`Excerto ${pad(i+1)}: ${selected.map(x=>AFFECTS[x].name).join(", ")}`);
+  });
+  lines.push("","","Referência dos afetos:");
+  AFFECTS.forEach(a=>lines.push(`${a.name} — ${a.desc}`));
+  return lines.join("\n");
+}
+
+$("download").addEventListener("click",()=>{
+  const blob=new Blob([makeText()],{type:"text/plain;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="affect-quiz-results.txt";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+
+$("again").addEventListener("click",()=>{
+  answers=Array.from({length: total}, () => []);
+  current=1;
+  $("results").style.display="none";
+  $("quiz").style.display="block";
+  loadExcerpt(1);
+});
+</script>
+</body>
+</html>
